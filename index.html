@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCPDP EDI Translator API</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Space Grotesk',sans-serif;
+}
+
+body{
+height:100vh;
+overflow:hidden;
+background:#050816;
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+}
+
+/* Animated Neural Grid */
+canvas{
+position:absolute;
+width:100%;
+height:100%;
+top:0;
+left:0;
+}
+
+/* Animated Glow Rings */
+
+.ring{
+position:absolute;
+border-radius:50%;
+border:1px solid rgba(0,255,255,.15);
+animation:rotate 12s linear infinite;
+}
+
+.ring:nth-child(2){
+width:420px;
+height:420px;
+animation-duration:18s;
+}
+
+.ring:nth-child(3){
+width:620px;
+height:620px;
+animation-duration:24s;
+animation-direction:reverse;
+}
+
+@keyframes rotate{
+from{transform:rotate(0deg);}
+to{transform:rotate(360deg);}
+}
+
+.login-box{
+position:relative;
+z-index:10;
+width:420px;
+background:rgba(10,15,40,.75);
+backdrop-filter:blur(18px);
+border:1px solid rgba(0,255,255,.15);
+padding:40px;
+border-radius:25px;
+box-shadow:0 0 40px rgba(0,255,255,.2);
+}
+
+.logo{
+width:70px;
+height:70px;
+margin:auto;
+border-radius:18px;
+background:linear-gradient(135deg,#00f7ff,#004cff);
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:30px;
+font-weight:bold;
+animation:pulse 3s infinite;
+}
+
+@keyframes pulse{
+50%{
+box-shadow:0 0 35px cyan;
+transform:scale(1.08);
+}
+}
+
+h1{
+text-align:center;
+font-size:26px;
+margin-top:20px;
+}
+
+.subtitle{
+text-align:center;
+margin:10px 0 30px;
+color:#8cc8ff;
+font-size:14px;
+}
+
+.input{
+margin-bottom:18px;
+}
+
+.input input{
+width:100%;
+padding:15px;
+background:#08182d;
+border:1px solid #163e72;
+border-radius:12px;
+color:white;
+font-size:15px;
+outline:none;
+transition:.3s;
+}
+
+.input input:focus{
+border-color:#00f7ff;
+box-shadow:0 0 18px rgba(0,255,255,.4);
+}
+
+button{
+width:100%;
+padding:15px;
+border:none;
+border-radius:14px;
+font-size:16px;
+font-weight:700;
+cursor:pointer;
+background:linear-gradient(90deg,#00d9ff,#0066ff);
+color:white;
+transition:.4s;
+}
+
+button:hover{
+transform:translateY(-3px);
+box-shadow:0 0 25px #00e5ff;
+}
+
+.bottom{
+margin-top:20px;
+display:flex;
+justify-content:space-between;
+font-size:13px;
+}
+
+.bottom a{
+color:#80dcff;
+text-decoration:none;
+}
+
+.ai{
+margin-top:20px;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+font-size:14px;
+color:#77ffd7;
+}
+
+.scan{
+width:12px;
+height:12px;
+background:#00ffbf;
+border-radius:50%;
+animation:scan 1.5s infinite;
+}
+
+@keyframes scan{
+0%{transform:scale(1);opacity:1;}
+100%{transform:scale(4);opacity:0;}
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="network"></canvas>
+
+<div class="ring"></div>
+<div class="ring"></div>
+
+<div class="login-box">
+
+<div class="logo">AI</div>
+
+<h1>NCPDP EDI Translator API</h1>
+
+<div class="subtitle">
+Intelligent Parsing • Secure Healthcare Integration
+</div>
+
+<div class="input">
+<input type="email" placeholder="Corporate Email">
+</div>
+
+<div class="input">
+<input type="password" placeholder="Password">
+</div>
+
+<button onclick="window.location.href='demo2.html'">
+    Login to AI Platform
+</button>
+
+<div class="ai">
+<div class="scan"></div>
+<span>AI Parsing Engine Initializing...</span>
+</div>
+
+<div class="bottom">
+<a href="#">Forgot Password?</a>
+<a href="#">Support</a>
+</div>
+
+</div>
+
+<script>
+const canvas=document.getElementById("network");
+const ctx=canvas.getContext("2d");
+
+function resize(){
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+}
+resize();
+window.onresize=resize;
+
+const points=[];
+
+for(let i=0;i<120;i++){
+points.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+vx:(Math.random()-.5)*0.6,
+vy:(Math.random()-.5)*0.6
+});
+}
+
+function animate(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+for(let p of points){
+
+p.x+=p.vx;
+p.y+=p.vy;
+
+if(p.x<0||p.x>canvas.width)p.vx*=-1;
+if(p.y<0||p.y>canvas.height)p.vy*=-1;
+
+ctx.beginPath();
+ctx.arc(p.x,p.y,2,0,Math.PI*2);
+ctx.fillStyle="#00e5ff";
+ctx.fill();
+
+for(let q of points){
+
+let dx=p.x-q.x;
+let dy=p.y-q.y;
+let d=Math.sqrt(dx*dx+dy*dy);
+
+if(d<130){
+
+ctx.beginPath();
+ctx.moveTo(p.x,p.y);
+ctx.lineTo(q.x,q.y);
+ctx.strokeStyle=`rgba(0,229,255,${1-d/130})`;
+ctx.stroke();
+
+}
+
+}
+
+}
+
+requestAnimationFrame(animate);
+
+}
+
+animate();
+</script>
+
+</body>
+</html>

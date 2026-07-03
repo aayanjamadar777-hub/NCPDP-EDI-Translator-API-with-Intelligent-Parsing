@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NCPDP Security</title>
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, sans-serif;
+    }
+
+    :root{
+      --cyan:#35f3ff;
+      --purple:#6a5cff;
+      --bg1:#071427;
+      --bg2:#050914;
+      --panel:#081724;
+      --text:#e8f4ff;
+      --muted:#9fb3d9;
+      --border:rgba(53,243,255,0.12);
+      --good:#19e6a8;
+      --warn:#ffcb6b;
+      --danger:#ff6b7d;
+    }
+
+    body{
+      min-height:100vh;
+      background: radial-gradient(circle at top, #17223b, #0a1020 55%, #050814);
+      color:var(--text);
+      overflow-x:hidden;
+    }
+
+    .page{
+      display:flex;
+      min-height:100vh;
+    }
+
+    .sidebar{
+      width:220px;
+      background:rgba(10,18,36,0.95);
+      border-right:1px solid rgba(0,255,255,0.08);
+      padding:20px;
+    }
+
+    .brand{
+      color:var(--cyan);
+      font-size:24px;
+      font-weight:700;
+      margin-bottom:30px;
+      text-shadow:0 0 12px rgba(53,243,255,0.18);
+    }
+
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .nav a{
+      color:#c8d7ff;
+      text-decoration:none;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,0.03);
+      transition:all .25s ease;
+      border:1px solid transparent;
+    }
+
+    .nav a:hover,
+    .nav a.active{
+      background:rgba(36,233,255,0.12);
+      border-color:rgba(53,243,255,0.14);
+      box-shadow:0 0 20px rgba(0,255,255,0.08);
+    }
+
+    .main{
+      flex:1;
+      padding:24px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:24px;
+      gap:16px;
+    }
+
+    .topbar h1{
+      font-size:28px;
+      margin-bottom:6px;
+      color:#eaf6ff;
+    }
+
+    .topbar p{
+      color:var(--muted);
+    }
+
+    .user-pill{
+      padding:10px 16px;
+      border-radius:20px;
+      background:rgba(36,233,255,0.12);
+      color:var(--cyan);
+      border:1px solid rgba(53,243,255,0.12);
+      white-space:nowrap;
+    }
+
+    .security-shell{
+      position:relative;
+      overflow:hidden;
+      border-radius:24px;
+      background:linear-gradient(145deg, rgba(9,18,38,0.96), rgba(6,11,24,0.92));
+      border:1px solid rgba(53,243,255,0.14);
+      box-shadow:
+        0 0 20px rgba(0,255,255,0.06),
+        inset 0 0 30px rgba(0,255,255,0.03);
+      transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease;
+    }
+
+    .security-shell:hover{
+      transform:translateY(-4px);
+      box-shadow:
+        0 0 28px rgba(0,255,255,0.10),
+        0 0 60px rgba(106,92,255,0.12),
+        inset 0 0 30px rgba(0,255,255,0.04);
+      border-color:rgba(53,243,255,0.25);
+    }
+
+    .security-border{
+      position:absolute;
+      inset:0;
+      border-radius:24px;
+      padding:1px;
+      background:linear-gradient(90deg, transparent, rgba(53,243,255,0.9), rgba(106,92,255,0.9), transparent);
+      background-size:200% 100%;
+      animation:borderFlow 4s linear infinite;
+      pointer-events:none;
+      opacity:0.7;
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor;
+      mask-composite:exclude;
+    }
+
+    @keyframes borderFlow{
+      0%{background-position:0% 50%;}
+      100%{background-position:200% 50%;}
+    }
+
+    .security-blobs{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+
+    .blob{
+      position:absolute;
+      border-radius:50%;
+      filter:blur(22px);
+      opacity:0.18;
+      animation:floatBlob 8s ease-in-out infinite;
+    }
+
+    .blob-1{
+      width:140px;
+      height:140px;
+      top:-30px;
+      left:-30px;
+      background:radial-gradient(circle, rgba(53,243,255,1), rgba(53,243,255,0));
+    }
+
+    .blob-2{
+      width:180px;
+      height:180px;
+      right:-50px;
+      top:40px;
+      background:radial-gradient(circle, rgba(106,92,255,1), rgba(106,92,255,0));
+      animation-delay:-2s;
+    }
+
+    .blob-3{
+      width:120px;
+      height:120px;
+      left:40%;
+      bottom:-35px;
+      background:radial-gradient(circle, rgba(0,255,170,1), rgba(0,255,170,0));
+      animation-delay:-4s;
+    }
+
+    @keyframes floatBlob{
+      0%,100%{transform:translate3d(0,0,0) scale(1);}
+      50%{transform:translate3d(0,-14px,0) scale(1.08);}
+    }
+
+    .security-content{
+      position:relative;
+      z-index:2;
+      padding:28px;
+    }
+
+    .hero-title{
+      margin:0;
+      color:var(--cyan);
+      font-size:clamp(28px,5vw,52px);
+      font-weight:800;
+      letter-spacing:.5px;
+      text-shadow:0 0 10px rgba(53,243,255,0.35), 0 0 24px rgba(53,243,255,0.18);
+    }
+
+    .hero-subtitle{
+      margin-top:12px;
+      color:#b6c5e6;
+      max-width:760px;
+      line-height:1.6;
+    }
+
+    .security-grid{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:18px;
+      margin-top:22px;
+    }
+
+    .card{
+      background:rgba(7,14,28,0.9);
+      border:1px solid rgba(53,243,255,0.10);
+      border-radius:18px;
+      padding:20px;
+      box-shadow:0 0 18px rgba(0,255,255,0.05);
+    }
+
+    .card h3{
+      color:#dff7ff;
+      margin-bottom:14px;
+      font-size:20px;
+    }
+
+    .security-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      padding:14px;
+      border-radius:14px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(53,243,255,0.08);
+      margin-bottom:12px;
+    }
+
+    .security-item:last-child{
+      margin-bottom:0;
+    }
+
+    .label-wrap{
+      min-width:0;
+    }
+
+    .label-wrap strong{
+      display:block;
+      color:#f2fbff;
+      margin-bottom:5px;
+    }
+
+    .label-wrap span{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    .toggle{
+      position:relative;
+      width:56px;
+      height:30px;
+      flex-shrink:0;
+    }
+
+    .toggle input{
+      display:none;
+    }
+
+    .slider{
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      background:rgba(159,179,217,0.22);
+      border:1px solid rgba(53,243,255,0.14);
+      transition:.25s ease;
+      cursor:pointer;
+    }
+
+    .slider::before{
+      content:"";
+      position:absolute;
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      left:3px;
+      top:2px;
+      background:#fff;
+      transition:.25s ease;
+      box-shadow:0 0 12px rgba(0,0,0,0.25);
+    }
+
+    .toggle input:checked + .slider{
+      background:rgba(25,230,168,0.32);
+      box-shadow:0 0 16px rgba(25,230,168,0.15);
+    }
+
+    .toggle input:checked + .slider::before{
+      transform:translateX(26px);
+      background:var(--good);
+    }
+
+    .btn-row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+
+    .btn{
+      position:relative;
+      border:1px solid rgba(53,243,255,0.18);
+      background:rgba(7,14,28,0.9);
+      color:#eafcff;
+      padding:12px 18px;
+      border-radius:14px;
+      cursor:pointer;
+      transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+      overflow:hidden;
+      font-weight:600;
+    }
+
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg, transparent, rgba(53,243,255,0.12), transparent);
+      transform:translateX(-100%);
+      transition:transform .6s ease;
+    }
+
+    .btn:hover::before{
+      transform:translateX(100%);
+    }
+
+    .btn:hover{
+      transform:translateY(-2px);
+      border-color:rgba(53,243,255,0.35);
+      box-shadow:0 0 18px rgba(53,243,255,0.12), 0 0 36px rgba(106,92,255,0.10);
+    }
+
+    .btn.primary{
+      background:linear-gradient(135deg, rgba(18,230,255,0.18), rgba(106,92,255,0.22));
+    }
+
+    .btn.secondary{
+      background:rgba(255,255,255,0.02);
+    }
+
+    .danger{
+      border-color:rgba(255,107,125,0.22);
+      color:#ffd8de;
+    }
+
+    .danger:hover{
+      box-shadow:0 0 18px rgba(255,107,125,0.12);
+    }
+
+    .mini-stats{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .mini{
+      padding:14px;
+      border-radius:14px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(53,243,255,0.08);
+    }
+
+    .mini .label{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .mini .value{
+      color:#fff;
+      font-size:24px;
+      font-weight:800;
+      margin-top:6px;
+    }
+
+    .status-box{
+      margin-top:14px;
+      padding:14px;
+      border-radius:14px;
+      background:rgba(36,233,255,0.08);
+      border:1px solid rgba(53,243,255,0.12);
+      color:#dff7ff;
+      line-height:1.5;
+    }
+
+    .secret-box{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+
+    .secret{
+      flex:1;
+      min-width:220px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(53,243,255,0.12);
+      background:rgba(255,255,255,0.03);
+      color:#eafcff;
+      outline:none;
+    }
+
+    .footer-note{
+      margin-top:14px;
+      color:#8ea7cc;
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    @media (max-width:1100px){
+      .security-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width:900px){
+      .page{
+        display:block;
+      }
+
+      .sidebar{
+        width:100%;
+      }
+    }
+
+    @media (max-width:640px){
+      .topbar{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+
+      .security-content{
+        padding:20px;
+      }
+
+      .hero-title{
+        font-size:34px;
+      }
+
+      .mini-stats{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <div class="brand">NCPDP AI</div>
+      <nav class="nav">
+        <a href="#">Dashboard</a>
+        <a href="#">Translator</a>
+        <a href="#">Upload</a>
+        <a href="#">Analytics</a>
+        <a href="#" class="active">Security</a>
+        <a href="#">Settings</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1>Security Center</h1>
+          <p>Access control, encryption, and session protection</p>
+        </div>
+        <div class="user-pill">Admin</div>
+      </div>
+
+      <section class="security-shell">
+        <div class="security-blobs" aria-hidden="true">
+          <span class="blob blob-1"></span>
+          <span class="blob blob-2"></span>
+          <span class="blob blob-3"></span>
+        </div>
+        <div class="security-border"></div>
+
+        <div class="security-content">
+          <h1 class="hero-title">Security Dashboard</h1>
+          <p class="hero-subtitle">
+            Manage account protection, session policies, two-factor authentication, API keys, and encryption settings with a clean neon UI that matches your other pages.
+          </p>
+
+          <div class="security-grid">
+            <div class="card">
+              <h3>Protection Settings</h3>
+
+              <div class="security-item">
+                <div class="label-wrap">
+                  <strong>Password Login</strong>
+                  <span>Require password for every sign-in attempt.</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="passwordLogin" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="security-item">
+                <div class="label-wrap">
+                  <strong>Two-Factor Authentication</strong>
+                  <span>Add SMS or authenticator verification for login.</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="twoFactor" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="security-item">
+                <div class="label-wrap">
+                  <strong>Session Lock</strong>
+                  <span>Auto-lock inactive sessions after a period of time.</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="sessionLock" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="security-item">
+                <div class="label-wrap">
+                  <strong>API Rate Protection</strong>
+                  <span>Limit repeated API attempts to prevent abuse.</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="rateLimit" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn primary" id="saveSecurity">Save Settings</button>
+                <button class="btn secondary" id="resetSecurity">Reset</button>
+                <button class="btn danger" id="lockSession">Lock Session</button>
+              </div>
+
+              <div class="status-box" id="securityStatus">All security settings are enabled and active.</div>
+            </div>
+
+            <div class="card">
+              <h3>API Keys</h3>
+
+              <div class="security-item" style="align-items:flex-start;">
+                <div class="label-wrap">
+                  <strong>Primary API Key</strong>
+                  <span>Use this key for server-to-server translator requests.</span>
+                </div>
+              </div>
+
+              <div class="secret-box">
+                <input type="password" id="apiKey" class="secret" value="ncpdp_live_8f3a9c2b1d" readonly />
+                <button class="btn secondary" id="toggleKey">Show</button>
+                <button class="btn primary" id="copyKey">Copy</button>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn primary" id="generateKey">Generate Key</button>
+                <button class="btn secondary" id="revokeKey">Revoke Key</button>
+              </div>
+
+              <div class="mini-stats">
+                <div class="mini">
+                  <div class="label">Failed Logins</div>
+                  <div class="value" id="failedLogins">0</div>
+                </div>
+                <div class="mini">
+                  <div class="label">Active Sessions</div>
+                  <div class="value" id="activeSessions">3</div>
+                </div>
+              </div>
+
+              <div class="status-box" id="keyStatus">
+                API key is protected and ready for use.
+              </div>
+
+              <div class="footer-note">
+                Client-side crypto support is available through the browser’s Web Crypto API in secure contexts. [web:1]
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const securityStatus = document.getElementById('securityStatus');
+    const keyStatus = document.getElementById('keyStatus');
+    const apiKey = document.getElementById('apiKey');
+    const failedLogins = document.getElementById('failedLogins');
+    const activeSessions = document.getElementById('activeSessions');
+
+    const passwordLogin = document.getElementById('passwordLogin');
+    const twoFactor = document.getElementById('twoFactor');
+    const sessionLock = document.getElementById('sessionLock');
+    const rateLimit = document.getElementById('rateLimit');
+
+    function updateSecurityText(){
+      const items = [
+        passwordLogin.checked ? 'Password login enabled' : 'Password login disabled',
+        twoFactor.checked ? '2FA enabled' : '2FA disabled',
+        sessionLock.checked ? 'Session lock enabled' : 'Session lock disabled',
+        rateLimit.checked ? 'Rate protection enabled' : 'Rate protection disabled'
+      ];
+      securityStatus.textContent = items.join(' • ');
+    }
+
+    [passwordLogin, twoFactor, sessionLock, rateLimit].forEach(el => {
+      el.addEventListener('change', updateSecurityText);
+    });
+
+    document.getElementById('saveSecurity').addEventListener('click', () => {
+      updateSecurityText();
+      keyStatus.textContent = 'Security settings saved successfully.';
+    });
+
+    document.getElementById('resetSecurity').addEventListener('click', () => {
+      passwordLogin.checked = true;
+      twoFactor.checked = true;
+      sessionLock.checked = true;
+      rateLimit.checked = true;
+      failedLogins.textContent = '0';
+      activeSessions.textContent = '3';
+      updateSecurityText();
+      keyStatus.textContent = 'Settings reset to default security configuration.';
+    });
+
+    document.getElementById('lockSession').addEventListener('click', () => {
+      activeSessions.textContent = Math.max(0, Number(activeSessions.textContent) - 1);
+      keyStatus.textContent = 'Current session locked.';
+    });
+
+    document.getElementById('toggleKey').addEventListener('click', (e) => {
+      const isHidden = apiKey.type === 'password';
+      apiKey.type = isHidden ? 'text' : 'password';
+      e.target.textContent = isHidden ? 'Hide' : 'Show';
+    });
+
+    document.getElementById('copyKey').addEventListener('click', async () => {
+      try{
+        await navigator.clipboard.writeText(apiKey.value);
+        keyStatus.textContent = 'API key copied to clipboard.';
+      }catch(err){
+        keyStatus.textContent = 'Copy failed. Browser permissions may block clipboard access.';
+      }
+    });
+
+    document.getElementById('generateKey').addEventListener('click', async () => {
+      const randomBytes = new Uint8Array(8);
+      if(window.crypto && crypto.getRandomValues){
+        crypto.getRandomValues(randomBytes);
+      }else{
+        for(let i=0;i<randomBytes.length;i++) randomBytes[i] = Math.floor(Math.random() * 256);
+      }
+
+      const key = Array.from(randomBytes).map(b => b.toString(16).padStart(2,'0')).join('');
+      apiKey.value = `ncpdp_live_${key}`;
+      apiKey.type = 'password';
+      document.getElementById('toggleKey').textContent = 'Show';
+      keyStatus.textContent = 'New API key generated securely.';
+    });
+
+    document.getElementById('revokeKey').addEventListener('click', () => {
+      apiKey.value = 'revoked_key';
+      apiKey.type = 'password';
+      document.getElementById('toggleKey').textContent = 'Show';
+      keyStatus.textContent = 'API key has been revoked.';
+    });
+
+    updateSecurityText();
+  </script>
+</body>
+</html>

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NCPDP Upload Page</title>
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, sans-serif;
+    }
+
+    :root{
+      --bg1:#071427;
+      --bg2:#050914;
+      --panel:#081724;
+      --panel2:#07111f;
+      --cyan:#35f3ff;
+      --purple:#6a5cff;
+      --text:#e8f4ff;
+      --muted:#9fb3d9;
+      --border:rgba(53,243,255,0.12);
+    }
+
+    body{
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top, #17223b, #0a1020 55%, #050814);
+      color:var(--text);
+      overflow-x:hidden;
+    }
+
+    .page{
+      display:flex;
+      min-height:100vh;
+    }
+
+    .sidebar{
+      width:220px;
+      background:rgba(10,18,36,0.95);
+      border-right:1px solid rgba(0,255,255,0.08);
+      padding:20px;
+      box-shadow:inset -1px 0 0 rgba(255,255,255,0.02);
+    }
+
+    .brand{
+      color:var(--cyan);
+      font-size:24px;
+      font-weight:700;
+      margin-bottom:30px;
+      text-shadow:0 0 12px rgba(53,243,255,0.18);
+    }
+
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .nav a{
+      color:#c8d7ff;
+      text-decoration:none;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,0.03);
+      transition:all .25s ease;
+      border:1px solid transparent;
+    }
+
+    .nav a:hover,
+    .nav a.active{
+      background:rgba(36,233,255,0.12);
+      border-color:rgba(53,243,255,0.14);
+      box-shadow:0 0 20px rgba(0,255,255,0.08);
+    }
+
+    .main{
+      flex:1;
+      padding:24px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:24px;
+      gap:16px;
+    }
+
+    .topbar h1{
+      font-size:28px;
+      margin-bottom:6px;
+      color:#eaf6ff;
+    }
+
+    .topbar p{
+      color:var(--muted);
+    }
+
+    .user-pill{
+      padding:10px 16px;
+      border-radius:20px;
+      background:rgba(36,233,255,0.12);
+      color:var(--cyan);
+      border:1px solid rgba(53,243,255,0.12);
+      white-space:nowrap;
+    }
+
+    .upload-shell{
+      position:relative;
+      overflow:hidden;
+      border-radius:24px;
+      background:linear-gradient(145deg, rgba(9,18,38,0.96), rgba(6,11,24,0.92));
+      border:1px solid rgba(53,243,255,0.14);
+      box-shadow:
+        0 0 20px rgba(0,255,255,0.06),
+        inset 0 0 30px rgba(0,255,255,0.03);
+      min-height:320px;
+      transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease;
+    }
+
+    .upload-shell:hover{
+      transform:translateY(-4px);
+      box-shadow:
+        0 0 28px rgba(0,255,255,0.10),
+        0 0 60px rgba(106,92,255,0.12),
+        inset 0 0 30px rgba(0,255,255,0.04);
+      border-color:rgba(53,243,255,0.25);
+    }
+
+    .upload-border{
+      position:absolute;
+      inset:0;
+      border-radius:24px;
+      padding:1px;
+      background:linear-gradient(90deg, transparent, rgba(53,243,255,0.9), rgba(106,92,255,0.9), transparent);
+      background-size:200% 100%;
+      animation:borderFlow 4s linear infinite;
+      pointer-events:none;
+      opacity:0.7;
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor;
+      mask-composite:exclude;
+    }
+
+    @keyframes borderFlow{
+      0%{background-position:0% 50%;}
+      100%{background-position:200% 50%;}
+    }
+
+    .upload-blobs{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+
+    .blob{
+      position:absolute;
+      border-radius:50%;
+      filter:blur(22px);
+      opacity:0.20;
+      animation:floatBlob 8s ease-in-out infinite;
+    }
+
+    .blob-1{
+      width:150px;
+      height:150px;
+      top:-30px;
+      left:-30px;
+      background:radial-gradient(circle, rgba(53,243,255,1), rgba(53,243,255,0));
+    }
+
+    .blob-2{
+      width:180px;
+      height:180px;
+      right:-50px;
+      top:40px;
+      background:radial-gradient(circle, rgba(106,92,255,1), rgba(106,92,255,0));
+      animation-delay:-2s;
+    }
+
+    .blob-3{
+      width:120px;
+      height:120px;
+      left:40%;
+      bottom:-35px;
+      background:radial-gradient(circle, rgba(0,255,170,1), rgba(0,255,170,0));
+      animation-delay:-4s;
+    }
+
+    @keyframes floatBlob{
+      0%,100%{transform:translate3d(0,0,0) scale(1);}
+      50%{transform:translate3d(0,-14px,0) scale(1.08);}
+    }
+
+    .upload-content{
+      position:relative;
+      z-index:2;
+      padding:28px;
+    }
+
+    .hero-title{
+      margin:0;
+      color:var(--cyan);
+      font-size:clamp(28px,5vw,52px);
+      font-weight:800;
+      letter-spacing:.5px;
+      text-shadow:0 0 10px rgba(53,243,255,0.35), 0 0 24px rgba(53,243,255,0.18);
+    }
+
+    .hero-subtitle{
+      margin-top:12px;
+      color:#b6c5e6;
+      max-width:760px;
+      line-height:1.6;
+    }
+
+    .upload-grid{
+      display:grid;
+      grid-template-columns: 1.3fr .7fr;
+      gap:18px;
+      margin-top:22px;
+    }
+
+    .card{
+      background:rgba(7,14,28,0.9);
+      border:1px solid rgba(53,243,255,0.10);
+      border-radius:18px;
+      padding:20px;
+      box-shadow:0 0 18px rgba(0,255,255,0.05);
+    }
+
+    .card h3{
+      color:#dff7ff;
+      margin-bottom:12px;
+      font-size:20px;
+    }
+
+    .dropzone{
+      position:relative;
+      border:1px dashed rgba(53,243,255,0.28);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(7,18,34,0.9), rgba(6,11,24,0.85));
+      min-height:260px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:20px;
+      transition:all .25s ease;
+      overflow:hidden;
+    }
+
+    .dropzone.dragover{
+      border-color:rgba(53,243,255,0.6);
+      box-shadow:0 0 30px rgba(53,243,255,0.12);
+      transform:translateY(-2px);
+    }
+
+    .dropzone .icon{
+      width:72px;
+      height:72px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      font-size:32px;
+      margin-bottom:14px;
+      background:rgba(36,233,255,0.10);
+      border:1px solid rgba(53,243,255,0.14);
+      color:var(--cyan);
+      box-shadow:0 0 25px rgba(53,243,255,0.08);
+    }
+
+    .dropzone p{
+      color:#bcd1ef;
+      line-height:1.6;
+      max-width:520px;
+    }
+
+    .small{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:8px;
+    }
+
+    .file-input{
+      display:none;
+    }
+
+    .btn-row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:18px;
+      justify-content:center;
+    }
+
+    .btn{
+      position:relative;
+      border:1px solid rgba(53,243,255,0.18);
+      background:rgba(7,14,28,0.9);
+      color:#eafcff;
+      padding:12px 18px;
+      border-radius:14px;
+      cursor:pointer;
+      transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+      overflow:hidden;
+      font-weight:600;
+    }
+
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg, transparent, rgba(53,243,255,0.12), transparent);
+      transform:translateX(-100%);
+      transition:transform .6s ease;
+    }
+
+    .btn:hover::before{
+      transform:translateX(100%);
+    }
+
+    .btn:hover{
+      transform:translateY(-2px);
+      border-color:rgba(53,243,255,0.35);
+      box-shadow:0 0 18px rgba(53,243,255,0.12), 0 0 36px rgba(106,92,255,0.10);
+    }
+
+    .btn.primary{
+      background:linear-gradient(135deg, rgba(18,230,255,0.18), rgba(106,92,255,0.22));
+    }
+
+    .btn.secondary{
+      background:rgba(255,255,255,0.02);
+    }
+
+    .preview-list{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .preview-item{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px;
+      border-radius:14px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(53,243,255,0.08);
+    }
+
+    .preview-left{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      min-width:0;
+    }
+
+    .file-badge{
+      width:46px;
+      height:46px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      background:rgba(36,233,255,0.10);
+      color:var(--cyan);
+      border:1px solid rgba(53,243,255,0.14);
+      flex-shrink:0;
+      font-size:20px;
+    }
+
+    .file-meta{
+      min-width:0;
+    }
+
+    .file-name{
+      font-size:14px;
+      color:#f2fbff;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:280px;
+    }
+
+    .file-size{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:3px;
+    }
+
+    .status-box{
+      margin-top:18px;
+      padding:14px;
+      border-radius:14px;
+      background:rgba(36,233,255,0.08);
+      border:1px solid rgba(53,243,255,0.12);
+      color:#dff7ff;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+
+    .stat{
+      padding:16px;
+      border-radius:16px;
+      background:rgba(7,14,28,0.9);
+      border:1px solid rgba(53,243,255,0.10);
+      box-shadow:0 0 18px rgba(0,255,255,0.04);
+    }
+
+    .stat .label{
+      color:#8eb6e8;
+      font-size:13px;
+      margin-bottom:8px;
+    }
+
+    .stat .value{
+      font-size:26px;
+      font-weight:800;
+      color:#fff;
+    }
+
+    .stat .sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .footer-note{
+      margin-top:14px;
+      color:#8ea7cc;
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    @media (max-width: 1000px){
+      .page{
+        display:block;
+      }
+
+      .sidebar{
+        width:100%;
+        margin-bottom:20px;
+      }
+
+      .upload-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width: 640px){
+      .topbar{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+
+      .upload-content{
+        padding:20px;
+      }
+
+      .hero-title{
+        font-size:34px;
+      }
+
+      .file-name{
+        max-width:180px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <div class="brand">NCPDP AI</div>
+      <nav class="nav">
+        <a href="#">Dashboard</a>
+        <a href="#">Translator</a>
+        <a href="#" class="active">Upload</a>
+        <a href="#">Analytics</a>
+        <a href="#">Security</a>
+        <a href="#">Settings</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1>Upload NCPDP File</h1>
+          <p>Secure file upload for EDI parsing and validation</p>
+        </div>
+        <div class="user-pill">Admin</div>
+      </div>
+
+      <section class="upload-shell">
+        <div class="upload-blobs" aria-hidden="true">
+          <span class="blob blob-1"></span>
+          <span class="blob blob-2"></span>
+          <span class="blob blob-3"></span>
+        </div>
+        <div class="upload-border"></div>
+
+        <div class="upload-content">
+          <h1 class="hero-title">Upload Center</h1>
+          <p class="hero-subtitle">
+            Drag and drop your NCPDP, EDI, DAT, TXT, or JSON file here. The system will preview the selected file, validate format, and prepare it for translation.
+          </p>
+
+          <div class="upload-grid">
+            <div class="card">
+              <h3>File Upload</h3>
+
+              <form id="uploadForm" method="post" enctype="multipart/form-data">
+                <input
+                  type="file"
+                  id="fileInput"
+                  class="file-input"
+                  name="ncpdpFile"
+                  accept=".txt,.edi,.dat,.json"
+                  multiple
+                />
+
+                <label id="dropzone" class="dropzone" for="fileInput">
+                  <div class="icon">⤴</div>
+                  <p><strong>Click to upload</strong> or drag and drop files here</p>
+                  <p class="small">Accepted formats: .txt, .edi, .dat, .json</p>
+                  <div class="btn-row">
+                    <span class="btn primary">Choose File</span>
+                    <span class="btn secondary">Validate</span>
+                  </div>
+                </label>
+
+                <div id="preview" class="preview-list">
+                  <div class="preview-item">
+                    <div class="preview-left">
+                      <div class="file-badge">📄</div>
+                      <div class="file-meta">
+                        <div class="file-name">No files currently selected</div>
+                        <div class="file-size">Waiting for upload</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="status-box" id="statusBox">
+                  Ready to upload. Select one or more NCPDP files to continue.
+                </div>
+
+                <div class="btn-row" style="justify-content:flex-start;">
+                  <button type="button" class="btn primary" id="uploadBtn">Upload & Parse</button>
+                  <button type="button" class="btn secondary" id="clearBtn">Clear</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="stats">
+              <div class="stat">
+                <div class="label">Uploaded Today</div>
+                <div class="value">248</div>
+                <div class="sub">+16% from yesterday</div>
+              </div>
+
+              <div class="stat">
+                <div class="label">Accepted Format</div>
+                <div class="value">4</div>
+                <div class="sub">TXT, EDI, DAT, JSON</div>
+              </div>
+
+              <div class="stat">
+                <div class="label">Processing Status</div>
+                <div class="value">Online</div>
+                <div class="sub">AI engine ready</div>
+              </div>
+
+              <div class="stat">
+                <div class="label">Average Parse Time</div>
+                <div class="value">82ms</div>
+                <div class="sub">Fast validation enabled</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer-note">
+            Tip: for best results, validate the file format before sending it to your backend API.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const input = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+    const statusBox = document.getElementById('statusBox');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const dropzone = document.getElementById('dropzone');
+
+    const allowed = [
+      '.txt','.edi','.dat','.json'
+    ];
+
+    function formatBytes(bytes){
+      if(bytes < 1000) return bytes + ' bytes';
+      if(bytes < 1000000) return (bytes / 1000).toFixed(1) + ' KB';
+      return (bytes / 1000000).toFixed(1) + ' MB';
+    }
+
+    function fileIcon(name){
+      const ext = name.split('.').pop().toLowerCase();
+      if(ext === 'json') return '🧩';
+      if(ext === 'edi' || ext === 'dat') return '📦';
+      if(ext === 'txt') return '📄';
+      return '📁';
+    }
+
+    function renderPreview(){
+      preview.innerHTML = '';
+
+      const files = input.files;
+
+      if(!files || files.length === 0){
+        preview.innerHTML = `
+          <div class="preview-item">
+            <div class="preview-left">
+              <div class="file-badge">📄</div>
+              <div class="file-meta">
+                <div class="file-name">No files currently selected</div>
+                <div class="file-size">Waiting for upload</div>
+              </div>
+            </div>
+          </div>
+        `;
+        statusBox.textContent = 'Ready to upload. Select one or more NCPDP files to continue.';
+        return;
+      }
+
+      Array.from(files).forEach(file => {
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+
+        item.innerHTML = `
+          <div class="preview-left">
+            <div class="file-badge">${fileIcon(file.name)}</div>
+            <div class="file-meta">
+              <div class="file-name">${file.name}</div>
+              <div class="file-size">${formatBytes(file.size)} • ${file.type || 'Unknown type'}</div>
+            </div>
+          </div>
+        `;
+        preview.appendChild(item);
+      });
+
+      statusBox.textContent = `${files.length} file(s) selected and ready for parsing.`;
+    }
+
+    input.addEventListener('change', renderPreview);
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if(e.dataTransfer.files && e.dataTransfer.files.length){
+        input.files = e.dataTransfer.files;
+        renderPreview();
+      }
+    });
+
+    uploadBtn.addEventListener('click', () => {
+      const files = input.files;
+      if(!files || files.length === 0){
+        statusBox.textContent = 'Please select a file first.';
+        return;
+      }
+      statusBox.textContent = `Uploading ${files.length} file(s)... Parsing started successfully.`;
+      setTimeout(() => {
+        statusBox.textContent = `Upload complete. ${files.length} file(s) validated and sent to translator engine.`;
+      }, 1200);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      renderPreview();
+    });
+
+    renderPreview();
+  </script>
+</body>
+</html>

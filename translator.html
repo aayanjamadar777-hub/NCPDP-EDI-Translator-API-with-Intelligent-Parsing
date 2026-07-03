@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NCPDP EDI Translator</title>
+  <style>
+    /* Reset + base */
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+    :root{
+      --bg-1:#071426;
+      --bg-2:#071827;
+      --accent-cyan: #35f3ff;
+      --accent-purple:#6A5CFF;
+      --panel:#081724;
+      --muted:#9fb3d9;
+      --card-glow: rgba(53,243,255,0.06);
+      --glass: rgba(255,255,255,0.02);
+    }
+
+    body{
+      min-height:100vh;
+      background: radial-gradient(1200px circle at 10% 10%, rgba(12,35,56,0.6), transparent 10%),
+                  radial-gradient(900px circle at 90% 20%, rgba(83,52,150,0.15), transparent 10%),
+                  linear-gradient(180deg,#07142a 0%, #030613 100%);
+      color:#dfefff;
+      -webkit-font-smoothing:antialiased;
+      overflow-y:scroll;
+    }
+
+    .page{
+      display:flex;
+      gap:24px;
+      min-height:100vh;
+      padding:28px;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      width:220px;
+      background: linear-gradient(180deg, rgba(6,17,30,0.95), rgba(3,8,18,0.95));
+      border-radius:14px;
+      padding:22px;
+      border:1px solid rgba(53,243,255,0.06);
+      box-shadow: 0 8px 30px rgba(3,8,18,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      flex-shrink:0;
+      position:relative;
+    }
+
+    .brand{
+      color:var(--accent-cyan);
+      font-weight:800;
+      font-size:20px;
+      margin-bottom:18px;
+      letter-spacing:0.6px;
+      text-shadow:0 6px 18px rgba(53,243,255,0.06);
+    }
+
+    .nav{display:flex;flex-direction:column;gap:12px;}
+    .nav a{
+      display:flex;align-items:center;gap:12px;
+      color:#bcd9ff;text-decoration:none;padding:12px;border-radius:12px;
+      background:transparent;border:1px solid transparent;
+      transition:all .18s ease;
+    }
+    .nav a.active{
+      background: linear-gradient(180deg, rgba(10,28,40,0.6), rgba(9,18,30,0.55));
+      color:var(--accent-cyan);
+      box-shadow: 0 6px 24px rgba(53,243,255,0.04), inset 0 1px 0 rgba(255,255,255,0.02);
+      border:1px solid rgba(53,243,255,0.08);
+    }
+    .nav a:hover{transform:translateX(4px);}
+
+    /* Main area */
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;
+    }
+    .topbar h1{font-size:20px;color:#e8fbff;font-weight:700;}
+    .topbar p{color:var(--muted);font-size:13px;margin-top:6px;}
+
+    .user-pill{
+      background:linear-gradient(90deg, rgba(53,243,255,0.08), rgba(106,92,255,0.06));
+      color:var(--accent-cyan);
+      padding:8px 14px;border-radius:999px;border:1px solid rgba(53,243,255,0.06);
+      box-shadow: 0 6px 18px rgba(53,243,255,0.03);
+      font-weight:600;
+    }
+
+    /* Hero shell (big card) */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:20px;
+      align-items:start;
+    }
+
+    .hero{
+      position:relative;
+      border-radius:20px;
+      padding:34px;
+      overflow:hidden;
+      background: linear-gradient(180deg, rgba(6,15,30,0.85), rgba(6,10,20,0.85));
+      border:1px solid rgba(53,243,255,0.06);
+      box-shadow: 0 6px 40px rgba(0,0,0,0.6), inset 0 0 80px rgba(53,243,255,0.02);
+      min-height:260px;
+    }
+
+    /* Animated border */
+    .hero::before{
+      content:"";
+      position:absolute;inset:0;padding:1px;border-radius:20px;
+      background:linear-gradient(90deg, transparent, rgba(53,243,255,0.9), rgba(106,92,255,0.9), transparent);
+      background-size:200% 100%;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      animation:borderFlow 5s linear infinite;
+      pointer-events:none;opacity:.8;
+    }
+    @keyframes borderFlow{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+
+    /* floating blobs inside hero */
+    .hero .blobs{position:absolute;inset:0;pointer-events:none;z-index:0;}
+    .blob{
+      position:absolute;border-radius:50%;filter:blur(28px);opacity:0.22;transform:translate3d(0,0,0);
+      animation:floatBlob 8s ease-in-out infinite;
+    }
+    .b1{width:160px;height:160px;left:-30px;top:-30px;background:radial-gradient(circle, rgba(53,243,255,1), rgba(53,243,255,0));}
+    .b2{width:200px;height:200px;right:-40px;top:40px;background:radial-gradient(circle, rgba(106,92,255,1), rgba(106,92,255,0));animation-delay:-2s;}
+    .b3{width:120px;height:120px;left:40%;bottom:-40px;background:radial-gradient(circle, rgba(0,255,170,1), rgba(0,255,170,0));animation-delay:-4s;}
+    @keyframes floatBlob{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(0,-12px,0) scale(1.08)}}
+
+    .hero-content{position:relative;z-index:2;display:flex;gap:28px;align-items:flex-start;}
+    .hero-left{flex:1;}
+    .title{font-size:40px;color:var(--accent-cyan);font-weight:800;line-height:1;letter-spacing:0.4px;text-shadow:0 8px 40px rgba(53,243,255,0.08);}
+    .subtitle{color:var(--muted);max-width:640px;margin-top:12px;line-height:1.6;}
+    .cta-row{display:flex;gap:12px;margin-top:20px;}
+    .btn{
+      padding:12px 18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);
+      background:linear-gradient(180deg, rgba(7,12,18,0.9), rgba(9,14,24,0.9));
+      color:#dff6ff;cursor:pointer;transition:all .18s ease;position:relative;overflow:hidden;
+    }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(18,230,255,0.12), rgba(106,92,255,0.14));
+      border:1px solid rgba(53,243,255,0.18);
+      box-shadow: 0 8px 30px rgba(53,243,255,0.03);
+    }
+    .btn:focus{outline:2px solid rgba(53,243,255,0.14);outline-offset:2px}
+    .btn::before{content:"";position:absolute;inset:0;background:linear-gradient(120deg, transparent, rgba(255,255,255,0.03), transparent);transform:translateX(-100%);transition:transform .6s ease}
+    .btn:hover::before{transform:translateX(100%)}
+
+    /* Right column small cards */
+    .stats-col{display:grid;grid-template-columns:1fr;gap:12px;align-self:start;}
+    .stat{
+      background: linear-gradient(180deg, rgba(6,14,28,0.7), rgba(7,10,18,0.6));
+      border-radius:12px;padding:16px;border:1px solid rgba(53,243,255,0.04);
+      box-shadow: 0 8px 30px rgba(3,8,18,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      color:#dff6ff;
+    }
+    .stat .label{color:var(--muted);font-size:13px}
+    .stat .value{font-size:28px;font-weight:800;margin-top:8px}
+
+    /* Grid of lower cards (metrics) */
+    .metrics{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:18px;
+      margin-top:6px;
+    }
+
+    .metric{
+      background: linear-gradient(180deg, rgba(6,15,30,0.8), rgba(6,10,20,0.75));
+      border-radius:14px;padding:18px;border:1px solid rgba(53,243,255,0.04);
+      box-shadow: 0 8px 40px rgba(3,8,18,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      color:#e8fbff;
+    }
+    .metric .m-label{color:var(--muted);font-size:13px}
+    .metric .m-value{font-size:26px;font-weight:800;margin-top:8px}
+
+    /* Lower area: upload + engine status */
+    .lower{
+      display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:6px;
+    }
+    .card{
+      border-radius:14px;padding:18px;background: linear-gradient(180deg, rgba(6,12,24,0.75), rgba(6,8,16,0.72));
+      border:1px solid rgba(53,243,255,0.04);box-shadow:0 8px 30px rgba(3,8,18,0.6);
+    }
+    .card h3{color:#dff6ff;margin-bottom:8px}
+
+    /* small utilities */
+    .muted{color:var(--muted);font-size:13px}
+    .tiny{font-size:12px;color:#9fb3d9}
+
+    /* Responsive */
+    @media (max-width:1000px){
+      .grid{grid-template-columns:1fr;}
+      .metrics{grid-template-columns:repeat(2,1fr);}
+      .lower{grid-template-columns:1fr;}
+      .sidebar{display:flex;width:100%;border-radius:12px;}
+      .page{padding:16px;flex-direction:column}
+    }
+    @media (max-width:560px){
+      .metrics{grid-template-columns:1fr;}
+      .nav a{padding:10px;font-size:14px}
+      .title{font-size:28px}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar" aria-label="Sidebar">
+      <div class="brand">NCPDP AI</div>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#" class="active">Dashboard</a>
+        <a href="#">Translator</a>
+        <a href="#">Upload</a>
+        <a href="#">Analytics</a>
+        <a href="#">Security</a>
+        <a href="#">Settings</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1>NCPDP EDI Translator API</h1>
+          <p class="muted">AI Powered Healthcare Integration</p>
+        </div>
+        <div class="user-pill" role="status" aria-label="Admin">Admin</div>
+      </div>
+
+      <section class="grid" aria-label="Hero and stats">
+        <div class="hero" role="region" aria-label="Hero">
+          <div class="blobs" aria-hidden="true">
+            <span class="blob b1"></span>
+            <span class="blob b2"></span>
+            <span class="blob b3"></span>
+          </div>
+
+          <div class="hero-content">
+            <div class="hero-left">
+              <div class="title">NCPDP EDI<br/>Translator API</div>
+              <div class="subtitle">Translate NCPDP EDI transactions into readable JSON with intelligent AI parsing. Designed for healthcare applications, pharmacy systems, and claim processing.</div>
+              <div class="cta-row">
+                <button class="btn primary" id="tryDemo">Try Demo</button>
+                <button class="btn" id="viewDocs">View Docs</button>
+              </div>
+            </div>
+
+            <div class="stats-col" aria-hidden="false">
+              <div class="stat">
+                <div class="label tiny">Today's Requests</div>
+                <div class="value">14,298</div>
+                <div class="tiny">+18% growth</div>
+              </div>
+              <div class="stat">
+                <div class="label tiny">Successful Parses</div>
+                <div class="value">99.92%</div>
+                <div class="tiny">Healthy</div>
+              </div>
+              <div class="stat">
+                <div class="label tiny">Processing Time</div>
+                <div class="value">82ms</div>
+                <div class="tiny">Average</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="right-col" aria-label="Quick metrics">
+          <div class="metric card" style="margin-bottom:12px;">
+            <div class="m-label">Connected APIs</div>
+            <div class="m-value">17</div>
+            <div class="tiny">Active</div>
+          </div>
+
+          <div class="metric card">
+            <div class="m-label">System Health</div>
+            <div class="m-value">Good</div>
+            <div class="tiny">All services nominal</div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="metrics" aria-label="Key metrics">
+        <div class="metric">
+          <div class="m-label">Today's Requests</div>
+          <div class="m-value">14,298</div>
+          <div class="tiny">+18%</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Successful Parses</div>
+          <div class="m-value">99.92%</div>
+          <div class="tiny">Healthy</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Processing Time</div>
+          <div class="m-value">82ms</div>
+          <div class="tiny">Average</div>
+        </div>
+      </section>
+
+      <section class="lower" aria-label="Lower content">
+        <div class="card">
+          <h3>Upload NCPDP File</h3>
+          <p class="muted">Drop a .dat or .edi file here or click choose file to upload for parsing.</p>
+          <div style="margin-top:12px;display:flex;gap:12px;align-items:center;">
+            <input id="fileInput" type="file" accept=".txt,.edi,.dat,.json" style="padding:.5rem;border-radius:8px;background:var(--glass);border:1px solid rgba(255,255,255,0.03);color:#dff6ff"/>
+            <button class="btn primary" id="uploadBtn">Upload & Parse</button>
+          </div>
+          <div id="uploadResult" class="tiny" style="margin-top:12px;color:#9fb3d9"></div>
+        </div>
+
+        <div class="card">
+          <h3>AI Engine Status</h3>
+          <p class="muted">Model: EDI-Parser-v1 — Status: <strong style="color:#66ffb3">Online</strong></p>
+          <div style="height:18px"></div>
+          <div class="tiny">CPU 18% -  Mem 34% -  Latency 82ms</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Small interactivity: "Try Demo" opens a simple modal-like prompt; upload simulates parse result.
+    document.getElementById('tryDemo').addEventListener('click', ()=> {
+      alert('Demo mode: paste a small NCPDP EDI sample into a backend form (this demo is static).');
+    });
+
+    document.getElementById('viewDocs').addEventListener('click', ()=> {
+      alert('Open docs: link to your API docs (configure URL).');
+    });
+
+    document.getElementById('uploadBtn').addEventListener('click', ()=> {
+      const f = document.getElementById('fileInput').files;
+      const out = document.getElementById('uploadResult');
+      if(!f){ out.textContent='No file selected.'; return; }
+      out.textContent = `Parsing ${f.name}... (simulated)`;
+      // Simulate async parse
+      setTimeout(()=> {
+        out.textContent = `Parsed ${f.name}: 1 claim found, 4 segments extracted. (This is a static demo.)`;
+      },900);
+    });
+  </script>
+</body>
+</html>
